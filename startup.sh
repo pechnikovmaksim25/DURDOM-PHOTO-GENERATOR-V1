@@ -35,6 +35,8 @@ NODES=(
     "https://github.com/rgthree/rgthree-comfy"
     "https://github.com/Starnodes2024/ComfyUI_StarNodes"
     "https://github.com/DesertPixelAi/ComfyUI-Desert-Pixel-Nodes"
+    "https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes"
+    "https://github.com/PozzettiAndrea/ComfyUI-DepthAnythingV3.git"
 )
 
 # ЗАГРУЗКА ФАЙЛОВ НУЖНЫХ
