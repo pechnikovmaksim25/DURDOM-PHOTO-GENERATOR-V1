@@ -1,152 +1,340 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
 source /venv/main/bin/activate
 
-WORKSPACE=${WORKSPACE:-/workspace}
+WORKSPACE="${WORKSPACE:-/workspace}"
 COMFYUI_DIR="${WORKSPACE}/ComfyUI"
+CUSTOM_NODES_DIR="${COMFYUI_DIR}/custom_nodes"
 
 echo "=== ComfyUI запускает PHOTO GENERATOR ==="
 
-APT_PACKAGES=()           # если нужно — добавь sudo apt install ...
-PIP_PACKAGES=()           # глобальные pip пакеты, если сверх requirements
-
-NODES=(
-    "https://github.com/ltdrdata/ComfyUI-Manager"
-    "https://github.com/kijai/ComfyUI-WanVideoWrapper"
-    "https://github.com/ltdrdata/ComfyUI-Impact-Pack"
-    "https://github.com/pythongosssss/ComfyUI-Custom-Scripts"
-    "https://github.com/chflame163/ComfyUI_LayerStyle"
-    "https://github.com/rgthree/rgthree-comfy"
-    "https://github.com/yolain/ComfyUI-Easy-Use"
-    "https://github.com/numz/ComfyUI-SeedVR2_VideoUpscaler"
-    "https://github.com/cubiq/ComfyUI_essentials"
-    "https://github.com/ClownsharkBatwing/RES4LYF"
-    "https://github.com/chrisgoringe/cg-use-everywhere"
-    "https://github.com/ltdrdata/ComfyUI-Impact-Subpack"
-    "https://github.com/Smirnov75/ComfyUI-mxToolkit"
-    "https://github.com/TheLustriVA/ComfyUI-Image-Size-Tools"
-    "https://github.com/ZhiHui6/zhihui_nodes_comfyui"
-    "https://github.com/kijai/ComfyUI-KJNodes"
-    "https://github.com/crystian/ComfyUI-Crystools"
-    "https://github.com/jnxmx/ComfyUI_HuggingFace_Downloader"
-    "https://github.com/plugcrypt/CRT-Nodes"
-    "https://github.com/EllangoK/ComfyUI-post-processing-nodes"
-    "https://github.com/Fannovel16/comfyui_controlnet_aux"
-    "https://github.com/rgthree/rgthree-comfy"
-    "https://github.com/Starnodes2024/ComfyUI_StarNodes"
-    "https://github.com/DesertPixelAi/ComfyUI-Desert-Pixel-Nodes"
+APT_PACKAGES=(
+    git
+    curl
+    wget
 )
 
-# ЗАГРУЗКА ФАЙЛОВ НУЖНЫХ
+PIP_PACKAGES=()
+
+NODES=(
+    "[github.com](https://github.com/ltdrdata/ComfyUI-Manager)"
+    "[github.com](https://github.com/kijai/ComfyUI-WanVideoWrapper)"
+    "[github.com](https://github.com/ltdrdata/ComfyUI-Impact-Pack)"
+    "[github.com](https://github.com/pythongosssss/ComfyUI-Custom-Scripts)"
+    "[github.com](https://github.com/chflame163/ComfyUI_LayerStyle)"
+    "[github.com](https://github.com/rgthree/rgthree-comfy)"
+    "[github.com](https://github.com/yolain/ComfyUI-Easy-Use)"
+    "[github.com](https://github.com/numz/ComfyUI-SeedVR2_VideoUpscaler)"
+    "[github.com](https://github.com/cubiq/ComfyUI_essentials)"
+    "[github.com](https://github.com/ClownsharkBatwing/RES4LYF)"
+    "[github.com](https://github.com/chrisgoringe/cg-use-everywhere)"
+    "[github.com](https://github.com/ltdrdata/ComfyUI-Impact-Subpack)"
+    "[github.com](https://github.com/Smirnov75/ComfyUI-mxToolkit)"
+    "[github.com](https://github.com/TheLustriVA/ComfyUI-Image-Size-Tools)"
+    "[github.com](https://github.com/ZhiHui6/zhihui_nodes_comfyui)"
+    "[github.com](https://github.com/kijai/ComfyUI-KJNodes)"
+    "[github.com](https://github.com/crystian/ComfyUI-Crystools)"
+    "[github.com](https://github.com/jnxmx/ComfyUI_HuggingFace_Downloader)"
+    "[github.com](https://github.com/plugcrypt/CRT-Nodes)"
+    "[github.com](https://github.com/EllangoK/ComfyUI-post-processing-nodes)"
+    "[github.com](https://github.com/Fannovel16/comfyui_controlnet_aux)"
+    "[github.com](https://github.com/Starnodes2024/ComfyUI_StarNodes)"
+    "[github.com](https://github.com/DesertPixelAi/ComfyUI-Desert-Pixel-Nodes)"
+)
+
 CLIP_MODELS=(
-    "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors"
+    "[huggingface.co](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors)"
 )
 
 CKPT_MODELS=(
-    "https://huggingface.co/cyberdelia/CyberRealisticPony/resolve/main/CyberRealisticPony_V15.0_FP32.safetensors"
+    "[huggingface.co](https://huggingface.co/cyberdelia/CyberRealisticPony/resolve/main/CyberRealisticPony_V15.0_FP32.safetensors)"
 )
 
 FUN_MODELS=(
-    "https://huggingface.co/arhiteector/zimage/resolve/main/Z-Image-Turbo-Fun-Controlnet-Union.safetensors"
+    "[huggingface.co](https://huggingface.co/arhiteector/zimage/resolve/main/Z-Image-Turbo-Fun-Controlnet-Union.safetensors)"
 )
 
 TEXT_ENCODERS=(
-    "https://huggingface.co/UmeAiRT/ComfyUI-Auto_installer/resolve/refs%2Fpr%2F5/models/clip/umt5-xxl-encoder-fp8-e4m3fn-scaled.safetensors"
+    "[huggingface.co](https://huggingface.co/UmeAiRT/ComfyUI-Auto_installer/resolve/refs%2Fpr%2F5/models/clip/umt5-xxl-encoder-fp8-e4m3fn-scaled.safetensors)"
 )
 
 UNET_MODELS=(
-    "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors"
+    "[huggingface.co](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors)"
 )
 
 VAE_MODELS=(
-    "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors"
+    "[huggingface.co](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors)"
 )
 
 DIFFUSION_MODELS=(
-    "https://huggingface.co/T5B/Z-Image-Turbo-FP8/resolve/main/z-image-turbo-fp8-e4m3fn.safetensors"
+    "[huggingface.co](https://huggingface.co/T5B/Z-Image-Turbo-FP8/resolve/main/z-image-turbo-fp8-e4m3fn.safetensors)"
 )
 
 BBOX_0=(
-    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/face_yolov8s.pt"
+    "[huggingface.co](https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/face_yolov8s.pt)"
 )
 
 BBOX_1=(
-    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/femaleBodyDetection_yolo26.pt"
+    "[huggingface.co](https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/femaleBodyDetection_yolo26.pt)"
 )
 
 BBOX_2=(
-    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/female_breast-v4.2.pt"
+    "[huggingface.co](https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/female_breast-v4.2.pt)"
 )
 
 BBOX_3=(
-    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/nipples_yolov8s.pt"
+    "[huggingface.co](https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/nipples_yolov8s.pt)"
 )
 
 BBOX_4=(
-    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/vagina-v4.2.pt"
+    "[huggingface.co](https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/vagina-v4.2.pt)"
 )
 
 BBOX_5=(
-    "https://huggingface.co/gazsuv/xmode/resolve/main/assdetailer.pt"
+    "[huggingface.co](https://huggingface.co/gazsuv/xmode/resolve/main/assdetailer.pt)"
 )
+
 SAM_PTH=(
-    "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/sams/sam_vit_b_01ec64.pth"
+    "[huggingface.co](https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/sams/sam_vit_b_01ec64.pth)"
 )
 
 BBOX_6=(
-    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/Eyeful_v2-Paired.pt"
+    "[huggingface.co](https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/Eyeful_v2-Paired.pt)"
 )
 
 BBOX_7=(
-    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/Eyes.pt"
+    "[huggingface.co](https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/Eyes.pt)"
 )
 
 BBOX_8=(
-    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/FacesV1.pt"
+    "[huggingface.co](https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/FacesV1.pt)"
 )
 
 BBOX_9=(
-    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/hand_yolov8s.pt"
+    "[huggingface.co](https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/hand_yolov8s.pt)"
 )
 
 BBOX_10=(
-    "https://huggingface.co/AunyMoons/loras-pack/blob/main/foot-yolov8l.pt"
+    "[huggingface.co](https://huggingface.co/AunyMoons/loras-pack/resolve/main/foot-yolov8l.pt)"
 )
 
 QWEN3VL_1=(
-    "https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/added_tokens.json"
-    "https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/chat_template.jinja"
-    "https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/config.json"
-    "https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/generation_config.json"
-    "https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/merges.txt"
-    "https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/model.safetensors.index.json"
-    "https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/preprocessor_config.json"
-    "https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/special_tokens_map.json"
-    "https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/tokenizer.json"
-    "https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/tokenizer_config.json"
-    "https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/vocab.json"
+    "[huggingface.co](https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/added_tokens.json)"
+    "[huggingface.co](https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/chat_template.jinja)"
+    "[huggingface.co](https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/config.json)"
+    "[huggingface.co](https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/generation_config.json)"
+    "[huggingface.co](https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/merges.txt)"
+    "[huggingface.co](https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/model.safetensors.index.json)"
+    "[huggingface.co](https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/preprocessor_config.json)"
+    "[huggingface.co](https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/special_tokens_map.json)"
+    "[huggingface.co](https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/tokenizer.json)"
+    "[huggingface.co](https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/tokenizer_config.json)"
+    "[huggingface.co](https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/vocab.json)"
 )
 
 QWEN3VL_2=(
-    "https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/model-00001-of-00002.safetensors"
+    "[huggingface.co](https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/model-00001-of-00002.safetensors)"
 )
 
 QWEN3VL_3=(
-    "https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/model-00002-of-00002.safetensors"
+    "[huggingface.co](https://huggingface.co/svjack/Qwen3-VL-4B-Instruct-heretic-7refusal/resolve/main/model-00002-of-00002.safetensors)"
 )
 
 UPSCALER_MODELS=(
-    "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/4xUltrasharp_4xUltrasharpV10.pt"
+    "[huggingface.co](https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/4xUltrasharp_4xUltrasharpV10.pt)"
 )
 
-### ─────────────────────────────────────────────
-### DO NOT EDIT BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
-### ─────────────────────────────────────────────
+log() {
+    echo ""
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
+}
 
-function provisioning_start() {
+fix_hf_url() {
+    local url="$1"
+    url="${url/blob\/main/resolve\/main}"
+    echo "$url"
+}
+
+get_auth_header() {
+    local url="$1"
+    if [[ "$url" =~ huggingface\.co ]] && [[ -n "${HF_TOKEN:-}" ]]; then
+        echo "Authorization: Bearer ${HF_TOKEN}"
+        return
+    fi
+    if [[ "$url" =~ civitai\.com ]] && [[ -n "${CIVITAI_TOKEN:-}" ]]; then
+        echo "Authorization: Bearer ${CIVITAI_TOKEN}"
+        return
+    fi
+    echo ""
+}
+
+download_file() {
+    local dir="$1"
+    local url="$2"
+    local fixed_url
+    fixed_url="$(fix_hf_url "$url")"
+
+    mkdir -p "$dir"
+
+    local filename
+    filename="$(basename "${fixed_url%%\?*}")"
+    local outfile="${dir}/${filename}"
+
+    if [[ -f "$outfile" && -s "$outfile" ]]; then
+        echo " [=] Already exists: $outfile"
+        return 0
+    fi
+
+    local auth_header
+    auth_header="$(get_auth_header "$fixed_url")"
+
+    echo " [>] Downloading: $fixed_url"
+
+    if [[ -n "$auth_header" ]]; then
+        curl -L --fail --retry 5 --retry-delay 5 \
+            -H "$auth_header" \
+            -o "$outfile" \
+            "$fixed_url" || {
+                echo " [!] Download failed: $fixed_url"
+                rm -f "$outfile"
+                return 1
+            }
+    else
+        curl -L --fail --retry 5 --retry-delay 5 \
+            -o "$outfile" \
+            "$fixed_url" || {
+                echo " [!] Download failed: $fixed_url"
+                rm -f "$outfile"
+                return 1
+            }
+    fi
+
+    if [[ ! -s "$outfile" ]]; then
+        echo " [!] Empty file downloaded: $outfile"
+        rm -f "$outfile"
+        return 1
+    fi
+
+    echo " [✓] Saved: $outfile"
+}
+
+provisioning_get_files() {
+    if [[ $# -lt 2 ]]; then
+        return 0
+    fi
+
+    local dir="$1"
+    shift
+    local files=("$@")
+
+    mkdir -p "$dir"
+    log "Скачивание ${#files[@]} file(s) → $dir"
+
+    local failed=0
+    for url in "${files[@]}"; do
+        download_file "$dir" "$url" || failed=1
+    done
+
+    return $failed
+}
+
+provisioning_get_apt_packages() {
+    if [[ ${#APT_PACKAGES[@]} -gt 0 ]]; then
+        log "Устанавливаю apt packages..."
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update
+        apt-get install -y --no-install-recommends "${APT_PACKAGES[@]}"
+        apt-get clean
+        rm -rf /var/lib/apt/lists/*
+    fi
+}
+
+provisioning_clone_comfyui() {
+    mkdir -p "$WORKSPACE"
+
+    if [[ ! -d "${COMFYUI_DIR}" ]]; then
+        log "Клонирую ComfyUI..."
+        git clone [github.com](https://github.com/comfyanonymous/ComfyUI.git) "${COMFYUI_DIR}"
+    else
+        log "ComfyUI уже существует, обновляю..."
+        git -C "${COMFYUI_DIR}" fetch --all --prune || true
+        git -C "${COMFYUI_DIR}" pull --ff-only || true
+    fi
+
+    cd "${COMFYUI_DIR}"
+}
+
+provisioning_install_base_reqs() {
+    cd "${COMFYUI_DIR}"
+
+    if [[ -f requirements.txt ]]; then
+        log "Устанавливаю base requirements..."
+        pip install --no-cache-dir -r requirements.txt
+    fi
+}
+
+provisioning_get_pip_packages() {
+    if [[ ${#PIP_PACKAGES[@]} -gt 0 ]]; then
+        log "Устанавливаю extra pip packages..."
+        pip install --no-cache-dir "${PIP_PACKAGES[@]}"
+    fi
+}
+
+update_or_clone_repo() {
+    local repo="$1"
+    local dir="${repo##*/}"
+    local path="${CUSTOM_NODES_DIR}/${dir}"
+
+    if [[ -d "$path/.git" ]]; then
+        echo "Updating node: $dir"
+        git -C "$path" fetch --all --prune || return 1
+
+        local branch
+        branch="$(git -C "$path" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||' || true)"
+        branch="${branch:-main}"
+
+        git -C "$path" checkout "$branch" 2>/dev/null || true
+        git -C "$path" pull --ff-only origin "$branch" || true
+        git -C "$path" submodule update --init --recursive || true
+    else
+        echo "Cloning node: $dir"
+        git clone --recursive "$repo" "$path" || {
+            echo " [!] Clone failed: $repo"
+            return 1
+        }
+    fi
+
+    local requirements="${path}/requirements.txt"
+    if [[ -f "$requirements" ]]; then
+        echo "Installing deps for $dir..."
+        pip install --no-cache-dir -r "$requirements" || echo " [!] pip requirements failed for $dir"
+    fi
+}
+
+provisioning_get_nodes() {
+    mkdir -p "${CUSTOM_NODES_DIR}"
+
+    log "Устанавливаю custom nodes..."
+
+    local unique_nodes=()
+    local seen=""
+
+    for repo in "${NODES[@]}"; do
+        if [[ " $seen " != *" $repo "* ]]; then
+            unique_nodes+=("$repo")
+            seen+=" $repo"
+        fi
+    done
+
+    for repo in "${unique_nodes[@]}"; do
+        update_or_clone_repo "$repo"
+    done
+}
+
+provisioning_start() {
     echo ""
     echo "##############################################"
-    echo "# FUCK THIS WORLD                            #"
     echo "# DURDOM PHOTO GENERATOR V1 2025-2026        #"
     echo "# BY RUSLAN & MAPICH                         #"
     echo "##############################################"
@@ -158,119 +346,53 @@ function provisioning_start() {
     provisioning_get_nodes
     provisioning_get_pip_packages
 
-    provisioning_get_files "${COMFYUI_DIR}/models/clip"               "${CLIP_MODELS[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/text_encoders"     "${TEXT_ENCODERS[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/unet"               "${UNET_MODELS[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/vae"                "${VAE_MODELS[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ckpt"               "${CKPT_MODELS[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/model_patches"      "${FUN_MODELS[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/diffusion_models"   "${DIFFUSION_MODELS[@]}"
+    provisioning_get_files "${COMFYUI_DIR}/models/clip" "${CLIP_MODELS[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/text_encoders" "${TEXT_ENCODERS[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/unet" "${UNET_MODELS[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/vae" "${VAE_MODELS[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/ckpt" "${CKPT_MODELS[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/model_patches" "${FUN_MODELS[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/diffusion_models" "${DIFFUSION_MODELS[@]}" || true
 
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox"   "${BBOX_0[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox"   "${BBOX_1[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox"   "${BBOX_2[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox"   "${BBOX_3[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox"   "${BBOX_4[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox"   "${BBOX_5[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox"   "${BBOX_6[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox"   "${BBOX_7[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox"   "${BBOX_8[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox"   "${BBOX_9[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox"   "${BBOX_10[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/sams"   "${SAM_PTH[@]}"
+    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_0[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_1[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_2[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_3[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_4[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_5[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_6[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_7[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_8[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_9[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox" "${BBOX_10[@]}" || true
 
-    provisioning_get_files "${COMFYUI_DIR}/models/prompt_generator/Qwen3-VL-4B-Instruct-heretic-7refusal"   "${QWEN3VL_1[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/prompt_generator/Qwen3-VL-4B-Instruct-heretic-7refusal"   "${QWEN3VL_2[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/prompt_generator/Qwen3-VL-4B-Instruct-heretic-7refusal"   "${QWEN3VL_3[@]}"
-    provisioning_get_files "${COMFYUI_DIR}/models/upscale_models"     "${UPSCALER_MODELS[@]}"
+    provisioning_get_files "${COMFYUI_DIR}/models/sams" "${SAM_PTH[@]}" || true
+
+    provisioning_get_files "${COMFYUI_DIR}/models/prompt_generator/Qwen3-VL-4B-Instruct-heretic-7refusal" "${QWEN3VL_1[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/prompt_generator/Qwen3-VL-4B-Instruct-heretic-7refusal" "${QWEN3VL_2[@]}" || true
+    provisioning_get_files "${COMFYUI_DIR}/models/prompt_generator/Qwen3-VL-4B-Instruct-heretic-7refusal" "${QWEN3VL_3[@]}" || true
+
+    provisioning_get_files "${COMFYUI_DIR}/models/upscale_models" "${UPSCALER_MODELS[@]}" || true
 
     echo ""
     echo "DURDOM настроил → Starting ComfyUI..."
     echo ""
 }
 
-function provisioning_clone_comfyui() {
+main() {
+    if [[ ! -f /.noprovisioning ]]; then
+        provisioning_start
+    fi
+
+    echo "=== DURDOM запускает ComfyUI ==="
+
     if [[ ! -d "${COMFYUI_DIR}" ]]; then
-        echo "DURDOM клонирует ComfyUI..."
-        git clone https://github.com/comfyanonymous/ComfyUI.git "${COMFYUI_DIR}"
+        echo "[!] ComfyUI directory not found: ${COMFYUI_DIR}"
+        exit 1
     fi
+
     cd "${COMFYUI_DIR}"
+    exec python main.py --listen 0.0.0.0 --port 8188
 }
 
-function provisioning_install_base_reqs() {
-    if [[ -f requirements.txt ]]; then
-        echo "DURDOM установливает base requirements..."
-        pip install --no-cache-dir -r requirements.txt
-    fi
-}
-
-function provisioning_get_apt_packages() {
-    if [[ ${#APT_PACKAGES[@]} -gt 0 ]]; then
-        echo "Газик устанавливает apt packages..."
-        sudo apt update && sudo apt install -y "${APT_PACKAGES[@]}"
-    fi
-}
-
-function provisioning_get_pip_packages() {
-    if [[ ${#PIP_PACKAGES[@]} -gt 0 ]]; then
-        echo "DURDOM устанавливает extra pip packages..."
-        pip install --no-cache-dir "${PIP_PACKAGES[@]}"
-    fi
-}
-
-function provisioning_get_nodes() {
-    mkdir -p "${COMFYUI_DIR}/custom_nodes"
-    cd "${COMFYUI_DIR}/custom_nodes"
-
-    for repo in "${NODES[@]}"; do
-        dir="${repo##*/}"
-        path="./${dir}"
-
-        if [[ -d "$path" ]]; then
-            echo "Updating node: $dir"
-            (cd "$path" && git pull --ff-only 2>/dev/null || { git fetch && git reset --hard origin/main; })
-        else
-            echo "Cloning node: $dir"
-            git clone "$repo" "$path" --recursive || echo " [!] Clone failed: $repo"
-        fi
-
-        requirements="${path}/requirements.txt"
-        if [[ -f "$requirements" ]]; then
-            echo "Installing deps for $dir..."
-            pip install --no-cache-dir -r "$requirements" || echo " [!] pip requirements failed for $dir"
-        fi
-    done
-}
-
-function provisioning_get_files() {
-    if [[ $# -lt 2 ]]; then return; fi
-    local dir="$1"
-    shift
-    local files=("$@")
-
-    mkdir -p "$dir"
-    echo "Скачивание ${#files[@]} file(s) → $dir..."
-
-    for url in "${files[@]}"; do
-        echo "→ $url"
-        local auth_header=""
-        if [[ -n "$HF_TOKEN" && "$url" =~ huggingface\.co ]]; then
-            auth_header="--header=Authorization: Bearer $HF_TOKEN"
-        elif [[ -n "$CIVITAI_TOKEN" && "$url" =~ civitai\.com ]]; then
-            auth_header="--header=Authorization: Bearer $CIVITAI_TOKEN"
-        fi
-
-        wget $auth_header -nc --content-disposition --show-progress -e dotbytes=4M -P "$dir" "$url" || echo " [!] Download failed: $url"
-        echo ""
-    done
-}
-
-# Запуск provisioning если не отключен
-if [[ ! -f /.noprovisioning ]]; then
-    provisioning_start
-fi
-
-# Запуск ComfyUI
-echo "=== DURDOM запускает ComfyUI ==="
-cd "${COMFYUI_DIR}"
-python main.py --listen 0.0.0.0 --port 8188
+main "$@"
