@@ -37,6 +37,7 @@ NODES=(
     "https://github.com/DesertPixelAi/ComfyUI-Desert-Pixel-Nodes"
     "https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes"
     "https://github.com/PozzettiAndrea/ComfyUI-DepthAnythingV3.git"
+    "https://github.com/PGCRT/CRT-Nodes.git"
 )
 
 # ЗАГРУЗКА ФАЙЛОВ НУЖНЫХ
@@ -49,11 +50,11 @@ CKPT_MODELS=(
 )
 
 FUN_MODELS=(
-    "https://huggingface.co/arhiteector/zimage/resolve/main/Z-Image-Turbo-Fun-Controlnet-Union.safetensors"
+    "https://huggingface.co/alibaba-pai/Z-Image-Turbo-Fun-Controlnet-Union-2.1/resolve/main/Z-Image-Turbo-Fun-Controlnet-Union-2.1.safetensors"
 )
 
 TEXT_ENCODERS=(
-    "https://huggingface.co/UmeAiRT/ComfyUI-Auto_installer/resolve/refs%2Fpr%2F5/models/clip/umt5-xxl-encoder-fp8-e4m3fn-scaled.safetensors"
+    "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors"
 )
 
 UNET_MODELS=(
@@ -62,6 +63,10 @@ UNET_MODELS=(
 
 VAE_MODELS=(
     "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors"
+)
+
+LORAS=(
+    "https://huggingface.co/vilone60/bbox/resolve/main/lenovo_flux_klein9b.safetensors"
 )
 
 DIFFUSION_MODELS=(
@@ -145,6 +150,7 @@ function provisioning_start() {
     provisioning_get_files "${COMFYUI_DIR}/models/ckpt"               "${CKPT_MODELS[@]}"
     provisioning_get_files "${COMFYUI_DIR}/models/model_patches"      "${FUN_MODELS[@]}"
     provisioning_get_files "${COMFYUI_DIR}/models/diffusion_models"   "${DIFFUSION_MODELS[@]}"
+    provisioning_get_files "${COMFYUI_DIR}/models/loras"              "${LORAS[@]}"
 
     provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox"   "${BBOX_0[@]}"
     provisioning_get_files "${COMFYUI_DIR}/models/ultralytics/bbox"   "${BBOX_1[@]}"
